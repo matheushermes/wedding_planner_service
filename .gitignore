@@ -1,0 +1,41 @@
+# Binários Go
+*.exe
+*.dll
+*.so
+*.dylib
+main
+amigo_secreto
+
+# Testes
+*.test
+*.out
+coverage.html
+
+# Go workspace
+go.work
+
+# Ambiente (privado)
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporários
+tmp/
+temp/
+
+# Build
+bin/
+dist/
