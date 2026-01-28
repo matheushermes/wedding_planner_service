@@ -18,6 +18,7 @@ var (
 	MAX_DB_CONNS       int
 	READ_TIMEOUT_SECS  int
 	WRITE_TIMEOUT_SECS int
+	JWT_SECRET         []byte
 )
 
 // LoadEnv carrega e valida variáveis de ambiente
@@ -51,6 +52,12 @@ func LoadEnv() {
 	// Valida formato básico da DSN
 	if !strings.Contains(DATABASE_URL, "@") || !strings.Contains(DATABASE_URL, "tcp(") {
 		log.Fatal("❌ DATABASE_URL inválida. Formato esperado: user:pass@tcp(host:port)/dbname?params")
+	}
+
+	// JWT Secret - CRÍTICO
+	JWT_SECRET = []byte(os.Getenv("JWT_SECRET"))
+	if len(JWT_SECRET) == 0 {
+		log.Fatal("❌ JWT_SECRET não definida")
 	}
 
 	// Configurações de performance
