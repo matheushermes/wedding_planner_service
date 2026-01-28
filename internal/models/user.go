@@ -18,13 +18,21 @@ type User struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Name         string `gorm:"not null" json:"name"`
-	Email        string `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash string `gorm:"not null" json:"-"`
+	Name         string `gorm:"not null" json:"name,omitempty"`
+	Email        string `gorm:"uniqueIndex;not null" json:"email,omitempty"`
+	PasswordHash string `gorm:"not null" json:"password,omitempty"`
 	PartnerName  string `json:"partner_name"`
 }
 
-func (u *User) isValid(step string) error {
+// LoginRequest representa os dados de login
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+// IsValid valida os dados do usuário
+// step pode ser "register" para registro ou "login" para login
+func (u *User) IsValid(step string) error {
 	u.trimSpaces()
 
 	if err := u.checkBlankFields(); err != nil {
@@ -47,7 +55,7 @@ func (u *User) isValid(step string) error {
 }
 
 func (u *User) checkBlankFields() error {
-		switch {
+	switch {
 	case u.Name == "":
 		return errors.New("name cannot be empty")
 	case u.Email == "":
