@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/matheushermes/wedding_planner_service/configs"
+	"github.com/matheushermes/wedding_planner_service/internal/controllers"
+	"github.com/matheushermes/wedding_planner_service/internal/server/middlewares"
 )
 
 // ConfigRoutes configura todas as rotas da API
@@ -26,12 +28,14 @@ func ConfigRoutes(router *gin.Engine) *gin.Engine {
 			health.GET("/status", healthCheck)
 		}
 
-		// Auth - Autenticação
-		auth := api.Group("/auth")
+		// User - Autenticação
+		user := api.Group("/user")
 		{
-			auth.POST("/register", nil) // TODO: Implementar controller
-			auth.POST("/login", nil)    // TODO: Implementar controller
-			auth.POST("/logout", nil)   // TODO: Implementar controller
+			user.POST("/register", controllers.RegisterUser)
+			user.POST("/login", controllers.Login)
+			user.PATCH("/update", controllers.UpdateProfile, middlewares.AuthMiddleware())
+			user.DELETE("/delete", controllers.DeleteUser, middlewares.AuthMiddleware())
+			user.POST("/logout", nil) // TODO: Implementar controller
 		}
 
 		// Wedding - Dados do Casamento
