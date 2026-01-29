@@ -31,27 +31,34 @@ func ConfigRoutes(router *gin.Engine) *gin.Engine {
 		// User - Autenticação
 		user := api.Group("/user")
 		{
+			// 🌐 públicas
 			user.POST("/register", controllers.RegisterUser)
 			user.POST("/login", controllers.Login)
-			user.PATCH("/update", controllers.UpdateProfile, middlewares.AuthMiddleware())
-			user.DELETE("/delete", controllers.DeleteUser, middlewares.AuthMiddleware())
-			user.POST("/logout", nil) // TODO: Implementar controller
+
+			// 🔐 privadas
+			user.Use(middlewares.AuthMiddleware())
+			{
+				user.GET("/profile", controllers.GetProfile)
+				user.PATCH("/update", controllers.UpdateProfile)
+				user.DELETE("/delete", controllers.DeleteUser)
+				user.POST("/logout", nil)
+			}
 		}
 
 		// Wedding - Dados do Casamento
-		weddings := api.Group("/weddings")
+		weddings := api.Group("/weddings", middlewares.AuthMiddleware())
 		{
-			weddings.POST("/", nil)      // TODO: Implementar controller - Criar casamento
-			weddings.GET("/", nil)       // TODO: Implementar controller - Listar casamentos do usuário
-			weddings.GET("/:id", nil)    // TODO: Implementar controller - Obter dados do casamento
-			weddings.PUT("/:id", nil)    // TODO: Implementar controller - Atualizar dados do casamento
-			weddings.DELETE("/:id", nil) // TODO: Implementar controller - Deletar casamento
+			weddings.POST("/", controllers.CreateWedding)
+			weddings.GET("/", controllers.GetWeddings)
+			weddings.GET("/:id", controllers.GetWedding)
+			weddings.PUT("/:id", controllers.UpdateWedding)
+			weddings.DELETE("/:id", controllers.DeleteWedding)
 
 			// Recursos aninhados dentro do wedding
 			wedding := weddings.Group("/:id")
 			{
 				// Contagem regressiva
-				wedding.GET("/countdown", nil) // TODO: Implementar controller - Obter contagem regressiva
+				wedding.GET("/countdown", controllers.GetCountdown)
 
 				// Guests - Módulo de Convidados
 				guests := wedding.Group("/guests")

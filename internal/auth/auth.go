@@ -14,10 +14,10 @@ import (
 // Constantes de configuração para tokens
 const (
 	// TokenExpirationTime define o tempo de vida do token (24h é um bom balanço entre segurança e UX)
-	TokenExpirationTime = 24 * time.Hour
+	TokenExpirationTime = 8 * time.Hour
 
 	// RefreshTokenExpirationTime define o tempo de vida do refresh token (7 dias)
-	RefreshTokenExpirationTime = 7 * 24 * time.Hour
+	RefreshTokenExpirationTime = 24 * time.Hour
 
 	// TokenType é o tipo do token (Bearer é o padrão OAuth 2.0)
 	TokenType = "Bearer"
@@ -145,36 +145,4 @@ func ExtractTokenMetadata(c *gin.Context) (*Claims, error) {
 	}
 
 	return claims, nil
-}
-
-// AuthMiddleware é um middleware para proteger rotas que requerem autenticação
-// USO: router.Use(auth.AuthMiddleware())
-func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Verifica o token
-		if err := VerifyToken(c); err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
-			c.Abort() // Impede que handlers subsequentes sejam executados
-			return
-		}
-
-		// PERFORMANCE: Extrai e armazena o userID no contexto para evitar re-parsing
-		// Handlers podem pegar com: userID := c.GetUint("user_id")
-		userID, err := ExtractUserID(c)
-		if err != nil {
-			c.JSON(401, gin.H{
-				"error": "failed to extract user information",
-			})
-			c.Abort()
-			return
-		}
-
-		// Armazena o user_id no contexto para uso nos handlers
-		c.Set("user_id", userID)
-
-		// Continua para o próximo handler
-		c.Next()
-	}
 }
