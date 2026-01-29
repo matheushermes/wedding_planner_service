@@ -57,3 +57,8 @@ func (r *UserRepository) Update(user *models.User) error {
 func (r *UserRepository) Delete(id uint) error {
 	return r.db.Delete(&models.User{}, id).Error
 }
+
+// HardDelete deleta um usuário permanentemente do banco de dados
+func (r *UserRepository) HardDelete(id uint) error {
+	return r.db.Unscoped().Delete(&models.User{}, id).Error
+}

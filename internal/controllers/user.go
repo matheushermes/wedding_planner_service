@@ -200,10 +200,10 @@ func GetProfile(c *gin.Context) {
 
 // UpdateProfile atualiza o perfil do usuário autenticado
 func UpdateProfile(c *gin.Context) {
-	userID, err := auth.ExtractUserID(c)
-	if err != nil {
+	userID, exists := c.Get("user_id")
+	if !exists {
 		c.JSON(http.StatusUnauthorized, errorResponse{
-			Error: err.Error(),
+			Error: "authentication required",
 		})
 		return
 	}
@@ -223,7 +223,7 @@ func UpdateProfile(c *gin.Context) {
 	}
 
 	repo := repository.NewUserRepository(database.DB)
-	user, err := repo.FindByID(userID)
+	user, err := repo.FindByID(userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusNotFound, errorResponse{
 			Error: "user not found",
@@ -259,29 +259,40 @@ func UpdateProfile(c *gin.Context) {
 	})
 }
 
-// DeleteUser deleta a conta do usuário autenticado (soft delete)
+// DeleteUser deleta permanentemente a conta do usuário autenticado
 func DeleteUser(c *gin.Context) {
-	userID, err := auth.ExtractUserID(c)
-	if err != nil {
+	userID, exists := c.Get("user_id")
+	if !exists {
 		c.JSON(http.StatusUnauthorized, errorResponse{
-			Error: err.Error(),
+			Error: "authentication required",
 		})
 		return
 	}
 
 	repo := repository.NewUserRepository(database.DB)
-	if err := repo.Delete(userID); err != nil {
-		log.Printf("[ERROR] Failed to delete user %d: %v", userID, err)
+
+	// Busca o usuário para log de auditoria
+	user, err := repo.FindByID(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusNotFound, errorResponse{
+			Error: "user not found",
+		})
+		return
+	}
+
+	// Executa o hard delete (exclusão permanente)
+	if err := repo.HardDelete(userID.(uint)); err != nil {
+		log.Printf("[ERROR] Failed to permanently delete user %d: %v", userID, err)
 		c.JSON(http.StatusInternalServerError, errorResponse{
 			Error: "unable to delete user account",
 		})
 		return
 	}
 
-	// Log de auditoria
-	log.Printf("[INFO] User %d deleted account from IP: %s", userID, c.ClientIP())
+	// Log de auditoria detalhado
+	log.Printf("[INFO] User %d (%s) permanently deleted account from IP: %s", userID, user.Email, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "user account deleted successfully",
+		"message": "user account permanently deleted",
 	})
 }
